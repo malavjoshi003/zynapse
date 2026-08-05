@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual Environment
+venv/
+.env
+
+# VS Code
+.vscode/
+
+# Generated files
+data/products_with_demand.csv
+
+# Large Dataset
+static/images/*
+
+# Keep folder
+!static/images/.gitkeep
+
+# MongoDB backup
+backup/
