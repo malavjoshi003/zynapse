@@ -1,52 +1,60 @@
-"""
-MongoDB Product Loader — ZYNAPSE
-Replaces pandas CSV loader with MongoDB queries.
-Provides get_df()-compatible interface for the transition.
-"""
+"""Load products from MongoDB, with a CSV fallback."""
+
 import pandas as pd
-from app.core.database import products_col, get_db
+from pymongo.errors import PyMongoError
+
+from app.core.database import products_col
 
 _df = None
 
 
-def load_data():
-    """Load products from MongoDB into a pandas DataFrame (cached)."""
+def _load_csv():
     global _df
+
+    from app.core.loader import load_data as csv_load
+    from app.core.loader import get_df as csv_get_df
+
+    csv_load()
+    _df = csv_get_df().copy()
+    print(f"[CSV] Loaded {len(_df):,} products")
+
+
+def load_data():
+    global _df
+
     if _df is not None:
         return
 
-    col = products_col()
-    count = col.count_documents({})
-
-    if count == 0:
-        print("[MongoLoader] No products in MongoDB. Run migrate_to_mongo.py first!")
-        print("[MongoLoader] Falling back to CSV loader...")
-        from app.core.loader import load_data as csv_load
-        csv_load()
+    try:
+        documents = list(
+            products_col().find({}, {"_id": 0})
+        )
+    except PyMongoError:
+        print("[MongoDB] Unavailable; loading CSV")
+        _load_csv()
         return
 
-    print(f"[MongoLoader] Loading {count:,} products from MongoDB...")
-    cursor = col.find({}, {"_id": 0})
-    _df = pd.DataFrame(list(cursor))
+    if not documents:
+        print("[MongoDB] No products found; loading CSV")
+        _load_csv()
+        return
 
-    # Ensure correct dtypes
-    _df["asin"] = _df["asin"].astype("int64")
-    _df["price"] = _df["price"].astype("float32")
-    _df["stars"] = _df["stars"].astype("float32")
-    _df["boughtInLastMonth"] = _df["boughtInLastMonth"].astype("int32")
+    dataframe = pd.DataFrame(documents)
+    dataframe["asin"] = dataframe["asin"].astype("int64")
+    dataframe["price"] = dataframe["price"].astype("float32")
+    dataframe["stars"] = dataframe["stars"].astype("float32")
+    dataframe["boughtInLastMonth"] = (
+        dataframe["boughtInLastMonth"].astype("int32")
+    )
 
-    print(f"[MongoLoader] ✅ {len(_df)} rows loaded from MongoDB. "
-          f"demand_score range: {_df['demand_score'].min():.1f} - {_df['demand_score'].max():.1f}")
+    _df = dataframe
+    print(f"[MongoDB] Loaded {len(_df):,} products")
 
 
 def get_df():
-    """Return the cached DataFrame. Falls back to CSV if MongoDB is empty."""
-    global _df
     if _df is None:
-        # Try CSV fallback
-        try:
-            from app.core.loader import get_df as csv_get_df
-            return csv_get_df()
-        except RuntimeError:
-            raise RuntimeError("Data not loaded — call load_data() first or run migrate_to_mongo.py")
+        raise RuntimeError(
+            "Product data is not loaded. Call load_data() first."
+        )
+
     return _df

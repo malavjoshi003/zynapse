@@ -13,11 +13,16 @@ venv/
 # Generated files
 data/products_with_demand.csv
 
-# Large Dataset
+# Large image dataset
 static/images/*
 
-# Keep folder
+# Keep the folder structure
 !static/images/.gitkeep
 
-# MongoDB backup
+# MongoDB backups
 backup/
+
+# OS files
+Thumbs.db
+.DS_Store
+deployment-assets/
