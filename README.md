@@ -1,211 +1,225 @@
 # ZYNAPSE
 
-An AI-assisted fashion marketplace that combines machine learning, FastAPI, and MongoDB to help analyze product demand, manage inventory, and provide useful business insights.
+An AI-assisted fashion marketplace built with FastAPI, MongoDB,
+and machine learning, with automated checks through GitHub Actions
+and automatic deployment to Vercel.
 
----
+## Links
+
+- [Live application](https://zynapse-fawn.vercel.app/)
+- [GitHub repository](https://github.com/malavjoshi003/zynapse)
+- [CI workflow runs](https://github.com/malavjoshi003/zynapse/actions)
 
 ## About the Project
 
-During my final year, I wanted to build something that combined backend development, databases, and machine learning in one application instead of creating another basic CRUD project.
+ZYNAPSE is a studio-based project combining web development,
+database management, and machine learning.
 
-Fashion marketplaces contain thousands of products, but sellers often have very little information about which products are likely to perform well. My goal was to build a platform that could use historical product information to estimate demand while also providing a complete marketplace where products can be managed and explored.
+The application helps users explore fashion products and analyze
+demand-related indicators such as price, ratings, purchase activity,
+and bestseller status.
 
-ZYNAPSE is the result of that idea.
-
-The application combines FastAPI, MongoDB, GridFS, and Machine Learning to create a marketplace capable of predicting demand, managing products, and presenting analytics through a clean web interface.
-
----
+The local application uses MongoDB for products, users, carts,
+orders, and GridFS images. The current Vercel deployment uses a
+CSV fallback for product data.
 
 ## Features
 
-### Marketplace
+### Marketplace and User Features
 
-- Browse fashion products
-- Product detail page
-- Category-wise products
-- User product management
-- Shopping cart
-- Order management
+The application includes code for:
 
-### Machine Learning
-
-- Product demand prediction
-- Demand trend analysis
-- Product analytics
-- AI-assisted recommendation workflow
-
-### Dashboard
-
-- Analytics dashboard
-- Inventory management
-- Category analysis
-- Product statistics
-
-### User Management
-
-- User registration
-- Login
+- Product browsing and product details
+- Category-based exploration
+- User registration and login
 - Profile management
+- User-added products
+- Shopping carts and orders
 
-### Database
+Database-dependent features require a working MongoDB connection.
+They are not fully configured in the current cloud deployment.
 
-- MongoDB
-- GridFS image storage
-- Indexed collections for faster queries
+### Machine Learning and Analytics
 
----
+- Demand-category prediction
+- Product analytics
+- Demand trends
+- Inventory and category dashboards
+- Class-balanced dataset generation
 
-## Technologies Used
+The current model uses Scikit-learn's MLPClassifier.
 
-### Frontend
+Demand labels are derived from a composite score based on ratings,
+purchase activity, bestseller status, and price. Model accuracy
+against these derived labels is not a measure of real-world sales
+forecasting accuracy.
 
-- HTML
-- CSS
-- JavaScript
+### DevOps
 
-### Backend
+- Source code hosted on GitHub
+- Automated dependency and syntax checks
+- Application startup and HTTP smoke checks
+- Automatic production deployment through Vercel
+- Git-tracked deployment configuration
 
-- Python
-- FastAPI
+## Technologies
 
-### Database
-
-- MongoDB
-- GridFS
-
-### Machine Learning
-
-- Scikit-learn
-- Pandas
-- NumPy
-
-### Tools
-
-- Git
-- GitHub
-- MongoDB Compass
-- VS Code
-
----
+| Area | Technologies |
+|---|---|
+| Frontend | HTML, CSS, JavaScript |
+| Backend | Python, FastAPI, Uvicorn |
+| Database | MongoDB, PyMongo, GridFS |
+| Data and machine learning | Pandas, NumPy, Scikit-learn |
+| Version control | Git, GitHub |
+| Continuous integration | GitHub Actions |
+| Continuous deployment and hosting | Vercel |
 
 ## Project Structure
 
-```
-zynapse-main
-
-│
-├── app
-│   ├── api
-│   ├── core
-│
-├── scripts
-│
-├── data
-│
-├── static
-│
+```text
+zynapse/
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+├── app/
+│   ├── api/
+│   └── core/
+│       ├── database.py
+│       ├── loader.py
+│       ├── mongo_loader.py
+│       ├── rf_model.py
+│       └── dataset_builder.py
+├── data/
+├── scripts/
+├── static/
+├── .gitignore
+├── .vercelignore
 ├── main.py
-│
+├── requirements.txt
+├── test_backend.py
 └── README.md
 ```
 
----
-
 ## How It Works
 
-The application follows a simple workflow.
+1. Load product information from MongoDB.
+2. Fall back to the product CSV when MongoDB is unavailable
+   or contains no products.
+3. Process product attributes and calculate demand-related features.
+4. Train the classification model during application startup.
+5. Serve the website and API through FastAPI.
 
-1. Product information is loaded from the dataset.
-2. Product images are stored using MongoDB GridFS.
-3. Product features are processed by the machine learning model.
-4. The model predicts demand categories.
-5. The prediction is displayed in the analytics dashboard and marketplace.
+In the local MongoDB setup, product images are served using GridFS.
 
----
+## Run Locally
 
-## Dataset
+The current dependency setup has been tested with Python 3.14.
 
-This project uses the Fashion Product Dataset available on Kaggle.
-
-Dataset Link
-
-https://www.kaggle.com/datasets/nirmalsankalana/fashion-product-text-images-dataset
-
-The repository does not include the image dataset because it is approximately 4 GB.
-
-After downloading the dataset, place the images inside:
-
-```
-
-static/images/
-
-```
-
----
-
-## Database Setup
-
-Install MongoDB Community Server.
-
-Import the dataset into MongoDB by running:
-
-```bash
-python scripts/migrate_to_mongo.py
-```
-
-The migration script imports
-
-- Product data
-- User data
-- Product images into GridFS
-
----
-
-## Running the Project
-
-Clone the repository
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/malavjoshi003/zynapse.git
+cd zynapse
 ```
 
-Go to the project directory
+### 2. Create a Virtual Environment
 
 ```bash
-cd zynapse-main
+python -m venv .venv
 ```
 
-Install dependencies
+Activate it in Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Or on macOS/Linux:
 
 ```bash
-pip install -r requirements.txt
+source .venv/bin/activate
 ```
 
-Run the migration
+### 3. Install Dependencies
 
 ```bash
-python scripts/migrate_to_mongo.py
+python -m pip install -r requirements.txt
 ```
 
-Start the backend
+### 4. Configure MongoDB When Needed
+
+The default connection is:
+
+```text
+mongodb://localhost:27017
+```
+
+The default database name is:
+
+```text
+zynapse
+```
+
+The application reads these environment variables:
+
+| Variable | Purpose |
+|---|---|
+| MONGO_URI | MongoDB connection URI |
+| MONGO_DB | Database name; defaults to zynapse |
+
+For example, in PowerShell:
+
+```powershell
+$env:MONGO_URI = "mongodb://localhost:27017"
+$env:MONGO_DB = "zynapse"
+```
+
+Set environment variables in the shell or hosting dashboard.
+Do not commit database credentials.
+
+### 5. Start the Application
 
 ```bash
 python -m uvicorn main:app --reload
 ```
 
-Open your browser
+Open:
 
-```
+```text
 http://127.0.0.1:8000
 ```
 
----
+Without MongoDB, the CSV fallback supports product-data loading.
+It does not replace database storage for accounts, carts, or orders.
 
-## Database Collections
+## Dataset and Images
 
-The project uses the following MongoDB collections.
+The project uses the
+[Fashion Product Dataset](https://www.kaggle.com/datasets/nirmalsankalana/fashion-product-text-images-dataset).
 
+- The CSV fallback loaded 10,000 products during verification.
+- The existing local MongoDB database contained 10,002 products.
+- The large original image dataset is excluded from Git.
+- Cloud image migration is outside the current deployment scope.
+
+For a local dataset setup, images can be placed in:
+
+```text
+static/images/
 ```
+
+The existing migration script can import data into MongoDB:
+
+```bash
+python scripts/migrate_to_mongo.py
+```
+
+Review its configuration and required input files before running it.
+Migration is not required to start the application with CSV data.
+
+## MongoDB Collections
+
+```text
 products
 users
 user_products
@@ -215,57 +229,134 @@ fs.files
 fs.chunks
 ```
 
----
+GridFS uses fs.files and fs.chunks to store image metadata
+and image contents.
 
-## What I Learned
+## Continuous Integration
 
-Working on this project gave me practical experience with:
+The workflow is defined in:
 
-- FastAPI development
-- REST API design
-- MongoDB and GridFS
-- Machine learning integration
-- Dataset preprocessing
-- Backend architecture
-- Git and GitHub workflow
+```text
+.github/workflows/ci.yml
+```
 
-More importantly, it helped me understand how different technologies can be combined into a single real-world application instead of being used separately.
+It runs automatically on:
 
----
+- Pushes to main
+- Pull requests targeting main
 
-## Current Limitations
+### Automated Checks
 
-There are still a few areas that can be improved.
+1. Check out the repository.
+2. Set up Python 3.14.
+3. Install requirements.txt.
+4. Check dependency compatibility using pip check.
+5. Compile application Python files to check syntax.
+6. Start FastAPI with an unavailable MongoDB address to exercise
+   the CSV fallback.
+7. Verify that /test-data returns a positive product count.
+8. Verify that the homepage returns a successful HTTP response.
 
-- Improve prediction accuracy
-- Enhance recommendation quality
-- Add JWT authentication
-- Improve frontend responsiveness
-- Deploy the application to the cloud
+The workflow stops with a failure if these checks fail.
 
-These improvements are planned for future versions.
+These are smoke checks. They do not test all business logic,
+browser interactions, authentication, or database-backed workflows.
 
----
+## Continuous Deployment
 
-## Future Scope
+Vercel is connected to the GitHub repository and recognizes
+the application as FastAPI.
 
-Some features I plan to add are:
+Each push to main automatically triggers a production deployment.
+No manual deployment command or approval is needed after setup.
 
-- Better recommendation algorithm
-- Real-time trend prediction
-- Sales forecasting
-- Explainable AI
-- Docker deployment
-- Cloud hosting
-- Admin reporting
+### Current CI/CD Behavior
 
----
+```text
+Edit files
+    ↓
+Commit and push to main
+    ├── GitHub Actions runs checks
+    └── Vercel builds and deploys the application
+```
 
-## Screenshots
+GitHub Actions and Vercel currently run independently.
+A failed GitHub Actions check does not automatically block
+a Vercel deployment.
 
-Screenshots will be added soon.
+Pull requests run the GitHub Actions checks. Vercel may also create
+preview deployments according to the project's Git integration settings.
 
----
+## Deployment Preparation
+
+The deployment work includes:
+
+- Adding Python dependency versions in requirements.txt
+- Handling MongoDB connection failures with a CSV fallback
+- Setting MongoDB connection timeouts
+- Using temporary storage for local upload files on Vercel
+- Disabling startup CSV export on Vercel
+- Excluding local datasets, backups, and preparation files with
+  .vercelignore
+
+## Deployment Verification
+
+The following were verified during setup:
+
+- GitHub Actions completed successfully.
+- Vercel reported a Ready production deployment.
+- The deployed /test-data endpoint returned:
+
+```json
+{"total_products":10000}
+```
+
+- A committed and pushed website text change appeared on the live
+  Vercel website without a manual redeployment.
+
+## Updating the Application
+
+After editing and saving a file:
+
+```bash
+git add static/index.html
+git commit -m "Update dashboard content"
+git push origin main
+```
+
+Check GitHub Actions for the CI result and Vercel for deployment
+status. Refresh the live website after the deployment is Ready.
+
+## Current Deployment Limitations
+
+- Cloud MongoDB is not configured.
+- Product image migration is not included.
+- Login, carts, orders, and other database-dependent features
+  are not fully configured for the deployed environment.
+- Temporary uploaded files are not persistent or shared between
+  Vercel instances.
+- Model training runs during startup and can increase startup time.
+- CI checks and production deployment are not currently gated together.
+- A successful deployment does not establish that every application
+  feature works.
+
+## Future Improvements
+
+- Configure persistent cloud database and image storage
+- Expand automated API and browser tests
+- Make production deployment depend on successful CI checks
+- Load a pre-trained model instead of training during startup
+- Evaluate demand predictions using independent sales data
+- Improve authentication and authorization
+- Improve recommendations and frontend responsiveness
+
+## Project and DevOps Work
+
+ZYNAPSE is an existing studio-based project used for this
+DevOps implementation.
+
+The DevOps work adds GitHub Actions checks, Vercel deployment,
+deployment-related compatibility changes, and documentation.
 
 ## Author
 
@@ -273,20 +364,14 @@ Screenshots will be added soon.
 
 Computer Science Engineering Student
 
-GitHub
-
-https://github.com/malavjoshi003
-
----
+[GitHub profile](https://github.com/malavjoshi003)
 
 ## Acknowledgements
 
+- ZYNAPSE studio project contributors
 - Kaggle Fashion Dataset
-- FastAPI
-- MongoDB
-- Scikit-learn
-- Python Community
-
----
-
-If you found this project interesting, consider giving it a ⭐ on GitHub.
+- FastAPI and Uvicorn
+- MongoDB and PyMongo
+- Scikit-learn, Pandas, and NumPy
+- GitHub Actions and Vercel
+- OpenAI Codex for implementation and documentation assistance
