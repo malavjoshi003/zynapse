@@ -358,3 +358,4 @@ if __name__ == "__main__":
         port=8000,
         reload=True,
     )
+      def ci_failure_demo(
