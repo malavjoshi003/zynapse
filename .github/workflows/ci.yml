@@ -48,6 +48,21 @@ jobs:
             if curl --fail --silent http://127.0.0.1:8000/test-data > /tmp/products.json; then
               READY=true
               break
+            fi   
+            if ! kill -0 "$APP_PID" 2>/dev/null; then
+              cat /tmp/zynapse.log
+              exit 1
             fi
+
+            sleep 2
+          done
+
+          if [ "$READY" != "true" ]; then
+            cat /tmp/zynapse.log
+            exit 1
+          fi
+
+          python -c "import json; data=json.load(open('/tmp/products.json')); assert data['total_products'] > 0, 'No products loaded'; print(data)"
+          curl --fail --silent http://127.0.0.1:8000/ -o /tmp/homepage.html
 
       
